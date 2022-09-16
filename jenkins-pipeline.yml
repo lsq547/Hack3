@@ -12,7 +12,7 @@ spec:
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: '*/master']],
+                                branches: [[name: '*/main']],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'cds']
                                 ],
