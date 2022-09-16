@@ -16,7 +16,7 @@ spec:
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'cds']
                                 ],
-                                userRemoteConfigs: [[url: 'https://github.com/lsq547/Hack3']]
+                                userRemoteConfigs: [[url: 'https://github.com/nicktodd/spring-course.git']]
                             ])
                   }
                 }
