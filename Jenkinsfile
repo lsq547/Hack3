@@ -1,12 +1,4 @@
-apiVersion: v1
-kind: BuildConfig
-metadata:
-  name: cd-pipeline
-spec:
-  strategy:
-    jenkinsPipelineStrategy:
-      jenkinsfile: |-
-        pipeline {
+pipeline {
               agent { label "maven" }
               stages {
                 stage("Clone Source") {
@@ -98,5 +90,3 @@ spec:
                 }
               }
             }
-    type: JenkinsPipeline
-  triggers: []

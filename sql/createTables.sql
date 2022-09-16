@@ -18,6 +18,7 @@ insert into compact_discs values(13,'Greatest Hits','Penelope',14,14.99);
 insert into compact_discs values(14,'Echo Park','Feeder',12,13.99);
 insert into compact_discs values(15,'Mezzanine','Massive Attack',11,12.99);
 insert into compact_discs values(16,'Spice World','Spice Girls',11,4.99);
+insert into compact_discs values(17,'snow man','great',11,5.99);
 
 
 use conygre; 
