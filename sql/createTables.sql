@@ -22,6 +22,7 @@ insert into compact_discs values(17,'snow man','great',11,5.99);
 insert into compact_discs values(18,'red','Taylor Swift',11,5.99);
 insert into compact_discs values(19,'attention','Charlie',11,5.99);
 insert into compact_discs values(20,'love story','Taylor',12,5.99);
+insert into compact_discs values(21,'begin again','Taylor',12,5.99);
 
 
 use conygre; 
