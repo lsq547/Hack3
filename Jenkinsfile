@@ -1,92 +1,31 @@
+def projectName = 'compact-disc'
+def version = "0.0.${currentBuild.number}"
+def dockerImageTag = "${projectName}:${version}"
+
 pipeline {
-              agent { label "maven" }
-              stages {
-                stage("Clone Source") {
-                  steps {
-                    checkout([$class: 'GitSCM',
-                                branches: [[name: '*/main']],
-                                extensions: [
-                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'cds']
-                                ],
-                                userRemoteConfigs: [[url: 'https://github.com/lsq547/Hack3']]
-                            ])
-                  }
-                }
-                stage("Build JAR") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh 'mvn -Dmaven.test.skip=true clean package'
-                    }
-                  }
-                }
-                stage("Create Build For Spring Boot Server") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh 'oc new-build --strategy docker --binary --name cd || echo "Build already exists"'
-                    }
-                  }
-                }
-                stage("Build Spring Boot Server Image") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh 'cp Dockerfile-cd-server Dockerfile'
-                      sh 'oc start-build cd --from-dir . --follow && rm Dockerfile'
-                    }
-                  }
-                }
-                stage("Create Build For Database Server") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh 'oc new-build --strategy docker --binary --name mysql || echo "Build already exists"'
-                    }
-                  }
-                }
-                stage("Build Database Image") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh 'cp Dockerfile-mysql Dockerfile'
-                      sh 'oc start-build mysql --from-dir . --follow && rm Dockerfile'
-                    }
-                  }
-                }
-                stage("Create persistent storage") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh '(oc get PersistentVolumeClaim | grep mysql-claim0) || oc apply -f openshiftnew/mysql-claim0-persistentvolumeclaim.yaml'
-                    }
-                  }
-                }
-                stage("Create Deployment Config") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh '(oc get deploymentconfig | grep mysql) || oc apply -f openshiftnew/mysql-deploymentconfig.yaml'
-                      sh '(oc get deploymentconfig | grep cd) || oc apply -f openshiftnew/cd-deploymentconfig.yaml'
-                      sh 'oc expose svc/cd || echo "cds already exposed"'
-                    }
-                  }
-                }
-                stage("Create Services and rollout deployment") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh '(oc get svc | grep mysql) || oc apply -f openshiftnew/mysql-service.yaml'
-                      sh '(oc get svc | grep cd) || oc apply -f openshiftnew/cd-service.yaml'
-                    }
-                  }
-                }
-                stage("Create Public route") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh '((oc get route | grep cd) && echo "cd already exposed") || oc expose svc/cds'
-                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep cds`"'
-                    }
-                  }
-                }
-                stage("Clean up on Isle 4") {
-                  steps {
-                    dir('cds/Solutions/workspace/CompactDiscDaoWithRestAndBoot') {
-                      sh 'oc delete pods `oc get pods | grep \'0/1\' | awk \'{print $1}\'`'
-                    }
-                  }
-                }
-              }
-            }
+  agent any
+
+  stages {
+    stage('Test') {
+      steps {
+        echo "Testing app"
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh "docker-compose build"
+      }
+    }
+
+    stage('Deploy to Openshift') {
+      steps {
+        sh "oc login https://localhost:8443 --username admin --password admin --insecure-skip-tls-verify=true"
+        sh "oc project ${projectName} || oc new-project ${projectName}"
+        sh "oc delete all --selector app=${projectName} || echo 'Unable to delete all previous openshift resources'"
+        sh "oc new-app ${dockerImageTag} -l version=${version}"
+        sh "oc expose svc/${projectName}"
+      }
+    }
+  }
+}
